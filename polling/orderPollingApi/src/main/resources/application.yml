@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: orderPollingApi
+  threads:
+    virtual:
+      enabled: true
