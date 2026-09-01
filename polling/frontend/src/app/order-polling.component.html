@@ -4,13 +4,13 @@
   <!-- Input Form -->
   <div class="form-group">
     <label for="orderNumber">Order Number:</label>
-    <input 
-      id="orderNumber" 
-      type="number" 
-      [(ngModel)]="orderNumber" 
-      [disabled]="isPolling()" 
+    <input
+      id="orderNumber"
+      type="number"
+      [(ngModel)]="orderNumber"
+      [disabled]="isPolling()"
       placeholder="Enter order ID"
-    />
+      />
   </div>
 
   <div class="form-group">
@@ -26,12 +26,16 @@
   </button>
 
   <!-- Status Display Box -->
-  <div *ngIf="currentStatus()" class="status-box" [ngClass]="getStatusClass(currentStatus()!)">
-    <h3>Current Status: {{ currentStatus() }}</h3>
-    <p>{{ statusMessage() }}</p>
-  </div>
+  @if (currentStatus()) {
+    <div class="status-box" [ngClass]="getStatusClass(currentStatus()!)">
+      <h3>Current Status: {{ currentStatus() }}</h3>
+      <p>{{ statusMessage() }}</p>
+    </div>
+  }
 
-  <div *ngIf="errorMessage()" class="error-box">
-    <p>{{ errorMessage() }}</p>
-  </div>
+  @if (errorMessage()) {
+    <div class="error-box">
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
 </div>

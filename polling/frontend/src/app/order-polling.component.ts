@@ -6,11 +6,10 @@ import { expand, switchMap, takeWhile } from 'rxjs/operators';
 import { OrderService, OrderType, OrderStatus } from './services/order.service';
 
 @Component({
-  selector: 'app-order-polling',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './order-polling.component.html',
-  styleUrls: ['./order-polling.component.css']
+    selector: 'app-order-polling',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './order-polling.component.html',
+    styleUrls: ['./order-polling.component.css']
 })
 export class OrderPollingComponent implements OnDestroy {
   private orderService = inject(OrderService);
