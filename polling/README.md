@@ -107,10 +107,10 @@ An order is removed from the in-memory store after a terminal result. Reusing th
 
 ```bash
 cd orderPollingApi
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="--enable-preview"
 ```
 
-The API starts on `http://localhost:8080`.
+The API starts on `http://localhost:8080`. The `--enable-preview` flag is required because the long-polling implementation uses `StructuredTaskScope`.
 
 Run backend tests with:
 

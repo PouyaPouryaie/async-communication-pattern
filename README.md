@@ -4,11 +4,13 @@ This repository contains the runnable examples for the **Async by Design** techn
 
 The examples are intended for mid-to-senior software engineers and solution architects who want to compare communication patterns by behavior, operational trade-offs, and service boundaries.
 
+Read the companion blog post on [Medium](https://medium.com/@pouyapouryaie/list/async-by-design-patterns-for-modern-distributed-systems-4c3afefbdd19) for the series overview and pattern discussions.
+
 ## Repository Map
 
 | Episode | Pattern | Project | Status |
 | --- | --- | --- | --- |
-| EP-01 | Foundations: synchronous vs asynchronous communication | Planned | Planned |
+| EP-01 | Foundations: synchronous vs asynchronous communication | [Medium blog post](https://medium.com/towardsdev/the-sync-vs-async-divide-foundations-pattern-landscape-a4d8acd988da) | Available |
 | EP-02 | Short polling and long polling | [`polling/`](polling/) | Available |
 | EP-03 | Webhooks | Planned | Planned |
 | EP-04 | Message queues: RabbitMQ and Kafka | Planned | Planned |
