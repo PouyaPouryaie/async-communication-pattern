@@ -1,0 +1,79 @@
+services:
+  order-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: order_user
+      POSTGRES_PASSWORD: order_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order_user -d orderdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  payment-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: payment_user
+      POSTGRES_PASSWORD: payment_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment_user -d paymentdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  payment-api:
+    build: ./paymentApi
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_NAME: paymentdb
+      DB_USER: payment_user
+      DB_PASSWORD: payment_pass
+      SERVER_PORT: 8082
+      SIMULATION_MIN_DELAY_SECONDS: 3
+      SIMULATION_MAX_DELAY_SECONDS: 6
+      SIMULATION_SUCCESS_RATE: 0.85
+    ports:
+      - "8082:8082"
+
+  order-api:
+    build: ./orderApi
+    depends_on:
+      order-db:
+        condition: service_healthy
+      payment-api:
+        condition: service_started
+    environment:
+      DB_HOST: order-db
+      DB_PORT: 5432
+      DB_NAME: orderdb
+      DB_USER: order_user
+      DB_PASSWORD: order_pass
+      SERVER_PORT: 8081
+      PUBLIC_BASE_URL: http://order-api:8081
+      PAYMENT_API_BASE_URL: http://payment-api:8082
+      # Shared HMAC secret this store registers with the payment application and
+      # uses to verify inbound webhook signatures. Override in a real deployment,
+      # e.g. via an env_file or secrets manager - never commit a real secret.
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-change-me-shared-secret}
+      REGISTRATION_MAX_ATTEMPTS: 10
+      REGISTRATION_RETRY_DELAY_SECONDS: 3
+    ports:
+      - "8081:8081"
+
+volumes:
+  order-db-data:
+  payment-db-data:

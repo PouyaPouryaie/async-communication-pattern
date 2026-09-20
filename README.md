@@ -12,7 +12,7 @@ Read the companion blog post on [Medium](https://medium.com/@pouyapouryaie/list/
 | --- | --- | --- | --- |
 | EP-01 | Foundations: synchronous vs asynchronous communication | [Medium blog post](https://medium.com/towardsdev/the-sync-vs-async-divide-foundations-pattern-landscape-a4d8acd988da) | Available |
 | EP-02 | Short polling and long polling | [`polling/`](polling/) | Available |
-| EP-03 | Webhooks | Planned | Planned |
+| EP-03 | Webhooks | [`webhooks/`](webhooks/) | Available |
 | EP-04 | Message queues: RabbitMQ and Kafka | Planned | Planned |
 | EP-05 | Server-Sent Events (SSE) | Planned | Planned |
 | EP-06 | WebSockets | Planned | Planned |
@@ -51,6 +51,22 @@ Order service -> in-memory order store
 ```
 
 **Takeaway:** Polling is useful when work outlives the initiating HTTP request and a push connection is unnecessary or unavailable.
+
+## Available Project: Webhooks
+
+The [`webhooks/`](webhooks/) project models a payment-processing e-commerce flow across two independent Spring Boot services: an online store (`orderApi`) and a simulated payment provider (`paymentApi`).
+
+It demonstrates:
+
+- **Registration:** the store registers its webhook URL and a shared secret with the payment application on startup.
+- **HMAC-SHA256 signed delivery:** the payment application signs every webhook; a `HmacVerificationFilter` on the store verifies it before any business logic runs.
+- **Retries with backoff:** the payment application retries failed webhook deliveries with Spring Retry's exponential backoff.
+- **Idempotency at two layers:** a service-layer existence check plus a database-layer unique constraint (`INSERT ... ON CONFLICT DO NOTHING`) protect against processing the same webhook delivery twice.
+- A simulated, asynchronous payment provider with a random processing delay and random success/failure outcome.
+
+Read the complete setup and API guide in [`webhooks/README.md`](webhooks/README.md).
+
+**Takeaway:** Webhooks let a slow, asynchronous external process (like payment settlement) notify your service the moment it completes, instead of your service polling for the result.
 
 ## Series Scope
 
@@ -93,7 +109,7 @@ Code examples favor constructor injection, records for suitable DTOs, explicit e
 
 ## Running an Example
 
-Each project is independently runnable. Start with the project-specific README because prerequisites and commands can differ between episodes. For the current Polling example:
+Each project is independently runnable. Start with the project-specific README because prerequisites and commands can differ between episodes. For the Polling example:
 
 ```bash
 cd polling/orderPollingApi
@@ -110,13 +126,22 @@ npm start
 
 Then open `http://localhost:4200`. The backend API runs at `http://localhost:8080`.
 
+For the Webhooks example:
+
+```bash
+cd webhooks
+docker compose up --build
+```
+
+The store's public API runs at `http://localhost:8081`; the payment application runs at `http://localhost:8082`. See [`webhooks/README.md`](webhooks/README.md) for the full API reference and a sample order request.
+
 **Takeaway:** Run examples from their own project directory so version-specific setup remains explicit.
 
 ## Series Progress
 
 - [ ] EP-01 — Foundations: Sync vs Async
 - [x] EP-02 — Polling
-- [ ] EP-03 — Webhooks
+- [x] EP-03 — Webhooks
 - [ ] EP-04 — Message Queues
 - [ ] EP-05 — Server-Sent Events (SSE)
 - [ ] EP-06 — WebSockets

@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: orderApi
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:orderdb}
+    username: ${DB_USER:order_user}
+    password: ${DB_PASSWORD:order_pass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+server:
+  port: ${SERVER_PORT:8081}
+
+app:
+  public-base-url: ${PUBLIC_BASE_URL:http://localhost:8081}
+  webhook:
+    secret: ${WEBHOOK_SECRET:change-me-shared-secret}
+  payment-api:
+    base-url: ${PAYMENT_API_BASE_URL:http://localhost:8082}
+  registration:
+    max-attempts: ${REGISTRATION_MAX_ATTEMPTS:10}
+    retry-delay-seconds: ${REGISTRATION_RETRY_DELAY_SECONDS:3}
+
+logging:
+  level:
+    ir.bigz.webhooks.orderApi: INFO
