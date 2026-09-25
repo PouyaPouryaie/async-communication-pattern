@@ -1,27 +1,17 @@
 package ir.bigz.webhooks.paymentApi.payment;
 
 import ir.bigz.webhooks.paymentApi.domain.Payment;
-import ir.bigz.webhooks.paymentApi.domain.PaymentStatus;
-import ir.bigz.webhooks.paymentApi.exception.MerchantNotFoundException;
-import ir.bigz.webhooks.paymentApi.repository.MerchantRegistrationRepository;
-import ir.bigz.webhooks.paymentApi.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 
 @Service
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
-    private final MerchantRegistrationRepository merchantRegistrationRepository;
+    private final PaymentSettlementService paymentSettlementService;
     private final PaymentProcessingSimulator paymentProcessingSimulator;
 
-    public PaymentService(PaymentRepository paymentRepository,
-                           MerchantRegistrationRepository merchantRegistrationRepository,
+    public PaymentService(PaymentSettlementService paymentSettlementService,
                            PaymentProcessingSimulator paymentProcessingSimulator) {
-        this.paymentRepository = paymentRepository;
-        this.merchantRegistrationRepository = merchantRegistrationRepository;
+        this.paymentSettlementService = paymentSettlementService;
         this.paymentProcessingSimulator = paymentProcessingSimulator;
     }
 
@@ -36,26 +26,8 @@ public class PaymentService {
      * start looking up the payment before this method's transaction commits.
      */
     public PaymentInitiatedResponse initiatePayment(InitiatePaymentRequest request) {
-        Payment saved = createPendingPayment(request);
+        Payment saved = paymentSettlementService.createPendingPayment(request);
         paymentProcessingSimulator.simulate(saved.getId());
         return new PaymentInitiatedResponse(saved.getId(), saved.getStatus());
-    }
-
-    @Transactional
-    Payment createPendingPayment(InitiatePaymentRequest request) {
-        if (!merchantRegistrationRepository.existsById(request.merchantId())) {
-            throw new MerchantNotFoundException(request.merchantId().toString());
-        }
-
-        Instant now = Instant.now();
-        Payment payment = new Payment();
-        payment.setMerchantId(request.merchantId());
-        payment.setOrderId(request.orderId());
-        payment.setAmount(request.amount());
-        payment.setCurrency(request.currency());
-        payment.setStatus(PaymentStatus.PENDING);
-        payment.setCreatedAt(now);
-        payment.setUpdatedAt(now);
-        return paymentRepository.save(payment);
     }
 }
