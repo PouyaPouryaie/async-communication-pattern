@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - order-db-data:/var/lib/postgresql/data
+      - ./volumes/order-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U order_user -d orderdb"]
       interval: 5s
@@ -24,7 +24,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - payment-db-data:/var/lib/postgresql/data
+      - ./volumes/payment-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U payment_user -d paymentdb"]
       interval: 5s
@@ -73,7 +73,3 @@ services:
       REGISTRATION_RETRY_DELAY_SECONDS: 3
     ports:
       - "8081:8081"
-
-volumes:
-  order-db-data:
-  payment-db-data:
