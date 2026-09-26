@@ -41,7 +41,7 @@ class OrderServiceTest {
 
     @Test
     void createOrderComputesTotalAndInitiatesPayment() {
-        orderService = new OrderService(orderRepository, productRepository, paymentClient);
+        orderService = new OrderService(new OrderSettlementService(orderRepository, productRepository), paymentClient);
         Product product = new Product();
         product.setId(1L);
         product.setName("Wireless Mouse");
@@ -71,7 +71,7 @@ class OrderServiceTest {
 
     @Test
     void createOrderRejectsUnknownProduct() {
-        orderService = new OrderService(orderRepository, productRepository, paymentClient);
+        orderService = new OrderService(new OrderSettlementService(orderRepository, productRepository), paymentClient);
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.createOrder(new CreateOrderRequest("customer@example.com", 99L, 1)))
@@ -80,7 +80,7 @@ class OrderServiceTest {
 
     @Test
     void createOrderRejectsInsufficientStock() {
-        orderService = new OrderService(orderRepository, productRepository, paymentClient);
+        orderService = new OrderService(new OrderSettlementService(orderRepository, productRepository), paymentClient);
         Product product = new Product();
         product.setId(1L);
         product.setPrice(new BigDecimal("20.00"));
