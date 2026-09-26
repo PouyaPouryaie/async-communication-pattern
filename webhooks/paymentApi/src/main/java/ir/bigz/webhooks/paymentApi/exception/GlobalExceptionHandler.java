@@ -16,6 +16,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", exception.getMessage()));
     }
 
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handlePaymentNotFound(PaymentNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PaymentNotCancelableException.class)
+    public ResponseEntity<Map<String, String>> handlePaymentNotCancelable(PaymentNotCancelableException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", exception.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getFieldErrors().stream()

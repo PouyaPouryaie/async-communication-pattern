@@ -3,6 +3,8 @@ package ir.bigz.webhooks.paymentApi.payment;
 import ir.bigz.webhooks.paymentApi.domain.Payment;
 import ir.bigz.webhooks.paymentApi.domain.PaymentStatus;
 import ir.bigz.webhooks.paymentApi.exception.MerchantNotFoundException;
+import ir.bigz.webhooks.paymentApi.exception.PaymentNotCancelableException;
+import ir.bigz.webhooks.paymentApi.exception.PaymentNotFoundException;
 import ir.bigz.webhooks.paymentApi.repository.MerchantRegistrationRepository;
 import ir.bigz.webhooks.paymentApi.repository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -45,12 +47,35 @@ public class PaymentSettlementService {
     }
 
     @Transactional
-    void applyOutcome(UUID paymentId, PaymentStatus outcome) {
-        Payment payment = paymentRepository.findById(paymentId)
+    boolean applyOutcome(UUID paymentId, PaymentStatus outcome) {
+        Payment payment = paymentRepository.findLockedById(paymentId)
                 .orElseThrow(() -> new IllegalStateException("Payment " + paymentId + " disappeared during processing"));
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            return false;
+        }
         payment.setStatus(outcome);
         payment.setUpdatedAt(Instant.now());
         paymentRepository.save(payment);
         log.info("Payment {} settled with outcome {}", paymentId, outcome);
+        return true;
+    }
+
+    @Transactional
+    Payment cancelPayment(UUID paymentId, String orderId) {
+        Payment payment = paymentRepository.findLockedById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+        if (!payment.getOrderId().equals(orderId)) {
+            throw new PaymentNotFoundException(paymentId);
+        }
+        if (payment.getStatus() == PaymentStatus.CANCELED) {
+            return payment;
+        }
+        if (payment.getStatus() == PaymentStatus.PENDING) {
+            throw new PaymentNotCancelableException(payment.getStatus());
+        }
+
+        payment.setStatus(PaymentStatus.CANCELED);
+        payment.setUpdatedAt(Instant.now());
+        return paymentRepository.save(payment);
     }
 }

@@ -34,9 +34,25 @@ public class PaymentClient {
         return new PaymentInitiationResult(response.paymentId(), response.status());
     }
 
+    public PaymentCancellationResult cancelPayment(String orderId, String paymentId) {
+        CancelRequest request = new CancelRequest(orderId, paymentId);
+        CancelResponse response = restClient.post()
+                .uri("/api/payments/cancel")
+                .body(request)
+                .retrieve()
+                .body(CancelResponse.class);
+        return new PaymentCancellationResult(response.status());
+    }
+
     private record InitiateRequest(String merchantId, String orderId, BigDecimal amount, String currency) {
     }
 
     private record InitiateResponse(String paymentId, String status) {
+    }
+
+    private record CancelRequest(String orderId, String paymentId) {
+    }
+
+    private record CancelResponse(String status) {
     }
 }

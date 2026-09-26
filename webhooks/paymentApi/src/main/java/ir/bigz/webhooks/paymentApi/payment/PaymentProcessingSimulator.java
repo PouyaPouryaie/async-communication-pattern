@@ -52,7 +52,8 @@ public class PaymentProcessingSimulator {
         }
 
         PaymentStatus outcome = RANDOM.nextDouble() < successRate ? PaymentStatus.SUCCEEDED : PaymentStatus.FAILED;
-        paymentSettlementService.applyOutcome(paymentId, outcome);
-        eventPublisher.publishEvent(new PaymentProcessedEvent(paymentId));
+        if (paymentSettlementService.applyOutcome(paymentId, outcome)) {
+            eventPublisher.publishEvent(new PaymentProcessedEvent(paymentId));
+        }
     }
 }

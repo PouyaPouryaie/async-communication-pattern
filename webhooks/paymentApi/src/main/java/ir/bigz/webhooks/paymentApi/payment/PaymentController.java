@@ -28,4 +28,9 @@ public class PaymentController {
         PaymentInitiatedResponse response = paymentService.initiatePayment(request);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
+
+    @PostMapping("/cancel")
+    public CancelPaymentResponse cancel(@Valid @RequestBody CancelPaymentRequest request) {
+        return paymentService.cancelPayment(request);
+    }
 }

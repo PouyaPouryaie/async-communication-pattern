@@ -29,6 +29,8 @@ it later, asynchronously, via webhook.
   database-layer unique constraint.
 - A simulated, asynchronous payment provider with a random processing delay
   and a random success/failure outcome.
+- A five-minute orderApi sweep that requests cancellation for payments still
+  processing ten minutes after the order's last update.
 
 ## Architecture
 
@@ -36,6 +38,7 @@ it later, asynchronously, via webhook.
 flowchart LR
     Customer[Customer] -->|POST /api/orders| OrderApi[orderApi\nlocalhost:8081]
     OrderApi -->|POST /api/payments/initiate| PaymentApi[paymentApi\nlocalhost:8082]
+    OrderApi -->|stale-order cancel request| PaymentApi
     OrderApi -.->|startup: POST /api/registry/register| PaymentApi
     PaymentApi -->|async simulation + signed webhook\nPOST /api/webhooks/payments| OrderApi
     OrderApi --> OrderDb[(order-db\nPostgres)]
@@ -55,13 +58,16 @@ flowchart LR
   the request reaches the controller.
 - `PaymentWebhookService` — idempotent webhook processing: updates the order,
   decrements stock, and logs a confirmation email.
+- `StaleOrderCancellationScheduler` — every five minutes, asks paymentApi to
+  cancel payments for orders whose `updated_at` is older than ten minutes;
+  marks an order `CANCELED` only after paymentApi confirms cancellation.
 
 ### paymentApi (payment application)
 
 - `RegistrationController`/`RegistrationService` — merchant registration,
   upserted by webhook URL so re-registering on every store restart is safe.
 - `PaymentController`/`PaymentService` — starts a payment and returns
-  immediately.
+  immediately, and handles merchant payment cancellation requests.
 - `PaymentProcessingSimulator` — an `@Async` method that waits a random delay
   then settles the payment with a random outcome, publishing a
   `PaymentProcessedEvent`.
@@ -161,6 +167,12 @@ sequenceDiagram
     OrderApi->>OrderApi: verify signature, check idempotency ledger
     OrderApi->>OrderApi: update order, decrement stock, log email
     OrderApi-->>PaymentApi: 200 OK
+
+    Note over OrderApi: Every five minutes, find PAYMENT_PROCESSING orders with updated_at older than ten minutes
+    OrderApi->>PaymentApi: POST /api/payments/cancel (orderId, paymentId)
+    PaymentApi->>PaymentApi: lock payment; reject PENDING, cancel SUCCEEDED/FAILED
+    PaymentApi-->>OrderApi: status CANCELED
+    OrderApi->>OrderApi: conditionally set order status CANCELED
 ```
 
 ## API Reference
@@ -178,6 +190,7 @@ sequenceDiagram
 | --- | --- | --- |
 | `POST` | `/api/registry/register` | Registers/updates a merchant's `{webhookUrl, secret}`. Returns `{merchantId}`. |
 | `POST` | `/api/payments/initiate` | Starts a simulated payment: `{merchantId, orderId, amount, currency}`. Returns `202` with `{paymentId, status}`. |
+| `POST` | `/api/payments/cancel` | Cancels a settled (`SUCCEEDED` or `FAILED`) payment for `{orderId, paymentId}`. Returns `{paymentId, status: "CANCELED"}`; returns `409` if it is still `PENDING`. |
 
 ## Running Locally
 

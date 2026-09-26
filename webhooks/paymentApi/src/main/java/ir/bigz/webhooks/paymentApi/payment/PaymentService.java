@@ -30,4 +30,9 @@ public class PaymentService {
         paymentProcessingSimulator.simulate(saved.getId());
         return new PaymentInitiatedResponse(saved.getId(), saved.getStatus());
     }
+
+    public CancelPaymentResponse cancelPayment(CancelPaymentRequest request) {
+        Payment canceled = paymentSettlementService.cancelPayment(request.paymentId(), request.orderId());
+        return new CancelPaymentResponse(canceled.getId(), canceled.getStatus());
+    }
 }
