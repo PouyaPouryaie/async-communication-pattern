@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: paymentApi
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:paymentdb}
+    username: ${DB_USER:payment_user}
+    password: ${DB_PASSWORD:payment_pass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8082}
+
+app:
+  simulation:
+    min-delay-seconds: ${SIMULATION_MIN_DELAY_SECONDS:3}
+    max-delay-seconds: ${SIMULATION_MAX_DELAY_SECONDS:6}
+    success-rate: ${SIMULATION_SUCCESS_RATE:0.85}
+
+logging:
+  level:
+    ir.bigz.webhooks.paymentApi: INFO
