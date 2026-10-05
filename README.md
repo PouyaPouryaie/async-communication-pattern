@@ -139,7 +139,7 @@ The store's public API runs at `http://localhost:8081`; the payment application 
 
 ## Series Progress
 
-- [ ] EP-01 — Foundations: Sync vs Async
+- [X] EP-01 — Foundations: Sync vs Async
 - [x] EP-02 — Polling
 - [x] EP-03 — Webhooks
 - [ ] EP-04 — Message Queues
