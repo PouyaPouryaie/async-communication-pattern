@@ -1,5 +1,6 @@
 package ir.bigz.messagequeue.consumer.infrastructure.messaging;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import ir.bigz.messagequeue.consumer.application.ProcessOrderEventUseCase;
 import ir.bigz.messagequeue.consumer.domain.OrderEvent;
 import org.junit.jupiter.api.AfterEach;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,6 +45,9 @@ class OrderEventRetryTest {
 	@Autowired
 	private AmqpAdmin amqpAdmin;
 
+	@Autowired
+	private MeterRegistry meterRegistry;
+
 	@MockitoSpyBean
 	private ProcessOrderEventUseCase processOrderEvent;
 
@@ -60,14 +63,15 @@ class OrderEventRetryTest {
 	}
 
 	@Test
-	void retriesTransientFailureTwiceThenDeadLetters() {
+	void retriesTransientFailureTwiceThenDeadLetters() throws InterruptedException {
 		var event = new OrderEvent("order-00001", Instant.parse("2026-11-11T00:00:00Z"));
 		doThrow(new IllegalStateException("simulated transient outage")).when(processOrderEvent).process(any());
+		double baseline = PoisonMessageCounter.count(meterRegistry);
 
 		rabbitTemplate.convertAndSend(OrderEventsTopologyConfig.EXCHANGE, OrderEventsTopologyConfig.ROUTING_KEY, event);
 
-		Message deadLettered = rabbitTemplate.receive(OrderEventsTopologyConfig.DEAD_LETTER_QUEUE, 15_000);
-		assertThat(deadLettered).isNotNull();
+		PoisonMessageCounter.awaitIncrement(meterRegistry, baseline);
+		assertThat(PoisonMessageCounter.count(meterRegistry)).isEqualTo(baseline + 1);
 		verify(processOrderEvent, times(3)).process(event);
 	}
 
