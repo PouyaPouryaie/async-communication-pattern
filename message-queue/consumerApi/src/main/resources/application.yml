@@ -7,6 +7,11 @@ spring:
     username: ${RABBITMQ_USER:order_events_user}
     password: ${RABBITMQ_PASSWORD:order_events_pass}
     virtual-host: ${RABBITMQ_VHOST:order-events}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+        concurrency: 1
 
 logging:
   level:
