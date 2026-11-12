@@ -21,3 +21,6 @@ spring:
 logging:
   level:
     ir.bigz.messagequeue.producer: INFO
+
+server:
+  port: ${SERVER_PORT:8083}
