@@ -7,6 +7,14 @@ spring:
     username: ${RABBITMQ_USER:order_events_user}
     password: ${RABBITMQ_PASSWORD:order_events_pass}
     virtual-host: ${RABBITMQ_VHOST:order-events}
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:messagedb}
+    username: ${DB_USER:message_user}
+    password: ${DB_PASSWORD:message_pass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
 
 logging:
   level:
