@@ -11,6 +11,8 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:consumerdb}
     username: ${DB_USER:consumer_user}
     password: ${DB_PASSWORD:consumer_pass}
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
   jpa:
     hibernate:
       ddl-auto: update
