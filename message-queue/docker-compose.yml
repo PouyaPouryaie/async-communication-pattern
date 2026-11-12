@@ -1,0 +1,37 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-order_events_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-order_events_pass}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-order-events}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  message-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-messagedb}
+      POSTGRES_USER: ${DB_USER:-message_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-message_pass}
+    ports:
+      - "5434:5432"
+    volumes:
+      - message-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-message_user} -d ${DB_NAME:-messagedb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rabbitmq-data:
+  message-db-data:
