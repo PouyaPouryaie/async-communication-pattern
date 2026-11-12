@@ -6,6 +6,8 @@ import ir.bigz.messagequeue.consumer.domain.InvalidOrderEventException;
 import ir.bigz.messagequeue.consumer.domain.OrderEvent;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.core.retry.RetryTemplate;
 
 import java.time.Instant;
 
@@ -24,7 +26,7 @@ class OrderEventListenerTest {
 	void processesEventThenAcknowledgesDelivery() throws Exception {
 		var processOrderEvent = mock(ProcessOrderEventUseCase.class);
 		var channel = mock(Channel.class);
-		var listener = new OrderEventListener(processOrderEvent);
+		var listener = new OrderEventListener(processOrderEvent, noRetry());
 		var event = new OrderEvent("order-00001", Instant.parse("2026-11-11T00:00:00Z"));
 
 		listener.onOrderEvent(event, channel, 42L);
@@ -39,12 +41,16 @@ class OrderEventListenerTest {
 		var processOrderEvent = mock(ProcessOrderEventUseCase.class);
 		doThrow(new InvalidOrderEventException("blank correlationId")).when(processOrderEvent).process(any());
 		var channel = mock(Channel.class);
-		var listener = new OrderEventListener(processOrderEvent);
+		var listener = new OrderEventListener(processOrderEvent, noRetry());
 
 		listener.onOrderEvent(new OrderEvent(" ", Instant.parse("2026-11-11T00:00:00Z")), channel, 42L);
 
 		verify(channel).basicNack(42L, false, false);
 		verify(channel, never()).basicAck(anyLong(), anyBoolean());
+	}
+
+	private static RetryTemplate noRetry() {
+		return new RetryTemplate(RetryPolicy.withMaxRetries(0));
 	}
 
 }
